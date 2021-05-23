@@ -1,8 +1,9 @@
-## AWS Setup
+# AWS Setup
+In this chapter, we'll configure a new AWS user with **IAM** and set up the **AWS CLI**.
 
-### IAM 
+## IAM 
 
-IAM is used to manage access to different AWS services:
+**IAM** is used to manage access to different AWS services:
 
     * WHO is trying to access services (authentication)
   
@@ -15,7 +16,7 @@ IAM is used to manage access to different AWS services:
 Instead of using the root user , let's configure a new user with more restrictive permissions.
 
 ```
-    We will be using the ap-southeast-2(Sydney) region throughout this course.
+    We will be using the ap-southeast-2 (Sydney) region throughout this course.
 ```
 
 Navigate to the Amazon IAM dashboard, click "Users" and then "Add user". Add a username, select both of the checkmarks next to the "Access type", and then uncheck "Require password reset":
@@ -37,40 +38,43 @@ Then, update your ~/.aws/credentials file. Take note of the generated password a
 
 Now our aws cli is also ready.
 
-### Elastic Container Registry
+## Elastic Container Registry
 
-In this chapter, we'll push our Docker images to the Elastic Container Registry (ECR), a private image registry.
-#### Image Registry
+In this chapter, we'll try to push our Docker images to the Elastic Container Registry (ECR), a private image registry of AWS.
+### Image Registry
 
-A container image registry is used to store and distribute container images. Docker Hub is one of the most popular image registry services for public images -- basically GitHub for Docker images.
+A container image registry is used to store and distribute container images. Docker Hub is one of the most popular image registry services for public images.
 
-#### ECR
+### ECR
 
 Why Elastic Container Registry?
 
-* You do not want to add any images to Docker Hub that have any sensitive info since the images will be publicly available
-* ECR plays nice with Elastic Container Service and CodeBuild (both of which we'll be setting up shortly)
-
-Navigate to Amazon ECS, click "Repositories", and then add two new repositories:
+    * You do not want to add any of you private images into Docker Hub that have any sensitive info since the images will be publicly available.
+    * ECR can work together with  Elastic Container Service and CodeBuild.
+  
+Navigate to Amazon ECR, click "Repositories", and then add two new repositories:
 
 ```
-    test-driven-users
-    test-driven-client
+    test-backend
+    test-frontend
 ```
 
-Keep the tags mutable. For more on this, review the Image Tag Mutability guide.
+Keep the tags **mutable**. For more on this, review the **Image Tag Mutability** guide.
 
 Ignore the "build, tag, and push" instructions if they come up; just set up the images for now.
 
-image
+<kbd> <img width="700" alt="4-create-two-reposiotry" src="4-create-two-reposiotry.png"> </kbd>
 
-You can also create a new repository with the AWS CLI:
+You can also create a new repository with the **AWS CLI**:
 
-$ aws ecr create-repository --repository-name REPOSITORY_NAME --region ap-southeast-2
+```
+    $ aws ecr create-repository --repository-name REPOSITORY_NAME --region ap-southeast-2
+```
 
 
-#### Push Images to ECR
-Now, we can build, tag, and push the images to ECR. We'll test it out with the current development versions of the Dockerfiles, without the required environment variables.
+### Push Images to ECR
+
+Now, we can build, tag, and push the images to ECR. 
 
 Build the images:
 
@@ -80,14 +84,14 @@ Build the images:
 
 ```
 $ docker build \
-  -f services/users/Dockerfile \
-  -t <AWS_ACCOUNT_ID>.dkr.ecr.us-west-1.amazonaws.com/test-driven-users:dev \
-  ./services/users
+  -f services/backend/Dockerfile \
+  -t <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend:dev \
+  ./services/backend
 
 $ docker build \
   -f services/client/Dockerfile \
-  -t <AWS_ACCOUNT_ID>.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:dev \
-  ./services/client
+  -t <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend:dev \
+  ./services/frontend
 
 ```
 Be sure to replace <AWS_ACCOUNT_ID> with your AWS account ID.
@@ -96,7 +100,7 @@ We now need to authenticate the Docker CLI to use the ECR registry:
 
 ```
 $ aws ecr get-login-password --region us-west-1 \
-  | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-west-1.amazonaws.com
+  | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.com
 ```
 You should see:
 
@@ -105,23 +109,24 @@ Login Succeeded
 Push the images:
 
 ```
-$ docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-west-1.amazonaws.com/test-driven-users:dev
+$ docker push <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend:dev
 
-$ docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:dev
+$ docker push <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend:dev
 ```
 
 Again, be sure to replace <AWS_ACCOUNT_ID> with your AWS account ID.
 
-If all goes well, a new image should be added to each of the repositories.
+If everything goes well, a new image should be added to each of these repositories.
 
 iamge
 
 
-### CodeBuild
+## CodeBuild
 
-In this chapter, we'll configure CodeBuild for building and testing Docker images.
+In this chapter, we'll configure CodeBuild for building Docker images.
 
-#### CodeBuild Setup
+### CodeBuild Setup
+
 CodeBuild is a managed continuous integration service used for building and testing code.
 
 Curious about the difference between continuous integration, continuous delivery, and continuous deployment? Check out the Continuous Delivery Explained guide.
@@ -133,24 +138,28 @@ image
 
 Let's create a new project for building the Docker images.
 
-##### Project configuration
+#### Project configuration
+
     * "Project name" - flask-react-build
     * "Description" - build and test docker images
     * "Build badge" - check the flag to "Enable build badge"
 
 iamge
 
-##### Source
-Use "GitHub" for the "Source provider". Select "Connect using OAuth", and click "Connect to Github" and allow access to your GitHub repos. After authenticating, under "Repository", select "Repository in my GitHub account". Then, add the GitHub repository you created for this project.
+#### Source
 
-Under "Additional configuration", check the box to "Report build statuses to source provider when your builds start and finish" under "Build Status".
+    * Use "GitHub" for the "Source provider". 
+    * Select "Connect using OAuth", and click "Connect to Github" and allow access to your GitHub repos.
+    * After authenticating, under "Repository", select "Repository in my GitHub account".  
+    * Add the GitHub repository you created for this project.
+    * Under "Additional configuration", check the box to "Report build statuses to source provider when your builds start and finish" under "Build Status".
 
 iamge
 
 
 Under "Primary source webhook events", check "Rebuild every time a code change is pushed to this repository". So, any time code is checked in, GitHub will ping the CodeBuild service, which will trigger a new build.
 
-Environment
+#### Environment
     * "Environment image" - use the "Managed image"
     * "Operating system" - "Ubuntu"
     * "Runtime" - "Standard"
@@ -171,7 +180,7 @@ Under "Additional configuration":
 image
 
 
-Buildspec, Artifacts, and Logs
+#### Buildspec, Artifacts, and Logs
     * Under "Build specifications", select "Use a buildspec file"
     * Skip the "Artifacts" section
     * Dump the logs to "CloudWatch"
@@ -226,8 +235,8 @@ phases:
           ./services/client
   post_build:
     commands:
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-users:prod
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-client:prod
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:prod
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:prod
 ```
 
 Here, we authenticate the Docker CLI to use the ECR registry, build the Docker images, and push them to ECR.
@@ -240,17 +249,17 @@ To fix, add the AmazonEC2ContainerRegistryPowerUser policy to the service role i
 
 image
 
-### Elastic Load Balancer
+## Elastic Load Balancer
 
 In the chapter, we'll add a load balancer to distribute traffic and create a more reliable app with automatic scaling and failover.
 
 
-#### ELB
+### ELB
 The Elastic Load Balancer (ELB) distributes incoming application traffic and scales resources as needed to meet traffic needs.
 
 A load balancer is one of (if not) the most important parts of your application since it needs to always be up, routing traffic to healthy services, and ready to scale at a moment’s notice.
 
-#### Load balancers:
+### Load balancers:
 
     * Enable horizontal scaling
     * Improve throughput, which can help decrease latency
@@ -353,59 +362,76 @@ With that, we can turn our attention to RDS.
 
 Before configuring ECS, let's set up Amazon Relational Database Service (RDS).
 
+## Setting up RDS
+
+Let's set up Amazon Relational Database Service (RDS).
+
 ### Why RDS?
-First off, why should we use RDS rather than managing Postgres on our own within a Docker container?
+
+First off, why should we use RDS rather than managing Postgres on our own inside an ec2 instance?
 
     1) Set up and management: With RDS, you are not responsible for configuring, securing, or maintaining the database -- AWS handles all this for you. Is this something that you need or want control over? Think about the costs associated with setting up and maintaining your own database. Do you have the time and knowledge to deal with backing up and restoring your database as well as failover and replication management? Will you need to hire a database administrator to do this for you?
    
     2) Data integrity: How do you plan to manage data volumes and persist data across containers? What happens if the container crashes?
-For more, check out this Reddit post.
 
-##### RDS Setup
-Navigate to Amazon RDS, click "Databases" on the sidebar, and then click the "Create database" button.
 
-Engine options and Templates:
+### RDS Setup
 
-For the settings, select the latest version of the "PostgreSQL" engine.
+    Navigate to Amazon RDS, click "Databases" on the sidebar, and then click the "Create database" button.
 
-Use the "Free Tier" template.
+    **Engine options** and **Templates**:
 
-image
+    For the settings, select the latest version of the **"PostgreSQL" engine**.
 
-image
+    Use the "Free Tier" template.
 
-##### Settings
+<kbd> <img width="700" alt="1-rds-engine-options" src="images/1-rds-engine-options.png"> </kbd>
 
-    "DB instance identifier": flask-react-db
-    "Master username": webapp
-    "Master password": Check "Auto generate a password"
 
-image
+<kbd> <img width="700" alt="2-rds-template" src="images/2-rds-template.png"> </kbd>
+
+### Settings
+
+    * "DB instance identifier": **webapp-db**
+    * "Master username": **webapp**
+    * "Master password": Check "Auto generate a password"
+
+
+<kbd> <img width="700" alt="3-rds-settings" src="images/3-rds-settings.png"> </kbd>
 
 DB instance size, Storage, and Availability & durability
 
-Don't make any changes.
+**Don't make any changes.**
 
-Connectivity
+### Connectivity
 
-Select the "VPC" and "Security group" associated with ALB. Turn off "Public accessibility". Select one of the available "Subnets" as well -- either us-west-1b or us-west-1c.
+    * Select the "VPC" and "Security group" associated with ALB. 
+    * Turn off "Public accessibility". 
+    * Select one of the available "Subnets" as well -- either ap-southeast-2a or ap-southeast-2b.
 
-image
+<kbd> <img width="700" alt="4-rds-connection" src="images/4-rds-connection.png"> </kbd>
 
 
-Additional configuration:
+### Additional configuration
 
-Change the "Initial database name" to api_prod and then create the new database.
+    * Change the "Initial database name" to **api_prod** and then create the new database.
 
-Click the "View credential details" button to view the generated password. Take note of it.
+    * Click the "View credential details" button to view the generated password. Take note of it.
 
-You can quickly check the status using the AWS CLI.
+    * You can quickly check the status using the AWS CLI.
+  
+```
+    Master username: webapp
+    Master password: JZTSg9QJr5ISN2ygOUIX
+```
 
 Unix users:
 
-$ aws --region us-west-1 rds describe-db-instances \
-  --db-instance-identifier flask-react-db \
-  --query 'DBInstances[].{DBInstanceStatus:DBInstanceStatus}'
+```
+    $ aws --region ap-southeast-2 rds describe-db-instances \
+    --db-instance-identifier webapp-db \
+    --query 'DBInstances[].{DBInstanceStatus:DBInstanceStatus}'
+```
 
 
 You should see:
@@ -419,17 +445,26 @@ Then, once the status is "available", you can grab the address.
 
 Unix users:
 
-$ aws --region us-west-1 rds describe-db-instances \
-  --db-instance-identifier flask-react-db \
-  --query 'DBInstances[].{Address:Endpoint.Address}'
+```
+    $ aws --region ap-southeast-2 rds describe-db-instances \
+    --db-instance-identifier webapp-db \
+    --query 'DBInstances[].{Address:Endpoint.Address}'
+```
 
 Take note of the production URI:
+[
+    {
+        "Address": "webapp-db.cv0q1mdq4txg.ap-southeast-2.rds.amazonaws.com"
+    }
+]
 
 postgres://webapp:<YOUR_RDS_PASSWORD>@<YOUR_RDS_ADDRESS>:5432/api_prod
+
 For example:
 
-postgres://webapp:rnPf1FLqNYv3RZMkvD8E@flask-react-db.c7kxiqfnzo9e.us-west-1.rds.amazonaws.com:5432/api_prod
-Keep in mind that you cannot access the DB outside the VPC. So, if you want to connect to the instance, you will need to use SSH tunneling via SSHing into an EC2 instance on the same VPC and, from there, connecting to the database. We'll go through this process in a future chapter.
+postgres://webapp:JZTSg9QJr5ISN2ygOUIX@webapp-db.cv0q1mdq4txg.ap-southeast-2.rds.amazonaws.com:5432/api_prod
+
+** Keep in mind that you cannot access the DB outside the VPC. So, if you want to connect to the instance, you will need to use SSH tunneling via SSHing into an EC2 instance on the same VPC and, from there, connecting to the database. We'll go through this process in a future chapter. **
 
 ## Elastic Container Service
 
