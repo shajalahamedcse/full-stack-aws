@@ -85,12 +85,12 @@ Build the images:
 ```
 $ docker build \
   -f services/backend/Dockerfile \
-  -t <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend:dev \
+  -t 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend \
   ./services/backend
 
 $ docker build \
   -f services/client/Dockerfile \
-  -t <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend:dev \
+  -t 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend \
   ./services/frontend
 
 ```
@@ -99,8 +99,8 @@ Be sure to replace <AWS_ACCOUNT_ID> with your AWS account ID.
 We now need to authenticate the Docker CLI to use the ECR registry:
 
 ```
-$ aws ecr get-login-password --region us-west-1 \
-  | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.com
+$ aws ecr get-login-password --region ap-southeast-2 \
+  | sudo docker login --username AWS --password-stdin 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com
 ```
 You should see:
 
@@ -274,7 +274,7 @@ Navigate to Amazon EC2, click "Load Balancers" on the sidebar, and then click th
 
 ##### Step 1: Configure Load Balancer
 
-    * "Name": flask-react-alb
+    * "Name": webapp-alb
     * "Scheme": internet-facing
     * "IP address type": ipv4
     * "Listeners": HTTP / Port 80
