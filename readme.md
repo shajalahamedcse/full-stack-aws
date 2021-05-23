@@ -4,7 +4,7 @@ IAM is used to manage access to AWS services:
     * WHO is trying to access (authentication)
     * WHICH service are they trying to access (authorization)
     * WHAT are they trying to do (authorization)
-<kbd> <img width="300" alt="1-new-iam" src="images/1-new-iam.png"> </kbd>
+<kbd> <img width="500" alt="1-new-iam" src="images/1-new-iam.png"> </kbd>
 
 
 Instead of using the root user (assuming you already set one up), let's configure a new user with more restrictive permissions.
