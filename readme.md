@@ -380,3 +380,565 @@ image
     "Master username": webapp
     "Master password": Check "Auto generate a password"
 
+image
+
+DB instance size, Storage, and Availability & durability
+
+Don't make any changes.
+
+Connectivity
+
+Select the "VPC" and "Security group" associated with ALB. Turn off "Public accessibility". Select one of the available "Subnets" as well -- either us-west-1b or us-west-1c.
+
+image
+
+
+Additional configuration:
+
+Change the "Initial database name" to api_prod and then create the new database.
+
+Click the "View credential details" button to view the generated password. Take note of it.
+
+You can quickly check the status using the AWS CLI.
+
+Unix users:
+
+$ aws --region us-west-1 rds describe-db-instances \
+  --db-instance-identifier flask-react-db \
+  --query 'DBInstances[].{DBInstanceStatus:DBInstanceStatus}'
+
+
+You should see:
+
+[
+    {
+        "DBInstanceStatus": "creating"
+    }
+]
+Then, once the status is "available", you can grab the address.
+
+Unix users:
+
+$ aws --region us-west-1 rds describe-db-instances \
+  --db-instance-identifier flask-react-db \
+  --query 'DBInstances[].{Address:Endpoint.Address}'
+
+Take note of the production URI:
+
+postgres://webapp:<YOUR_RDS_PASSWORD>@<YOUR_RDS_ADDRESS>:5432/api_prod
+For example:
+
+postgres://webapp:rnPf1FLqNYv3RZMkvD8E@flask-react-db.c7kxiqfnzo9e.us-west-1.rds.amazonaws.com:5432/api_prod
+Keep in mind that you cannot access the DB outside the VPC. So, if you want to connect to the instance, you will need to use SSH tunneling via SSHing into an EC2 instance on the same VPC and, from there, connecting to the database. We'll go through this process in a future chapter.
+
+## Elastic Container Service
+
+Let's configure a Task Definition along with a Cluster and a Service within Elastic Container Service (ECS).
+
+### ECS
+ECS is a container orchestration system used for managing and deploying Docker-based containers.
+
+It has four main components:
+
+    Task Definitions
+    Tasks
+    Services
+    Clusters
+In short, Task Definitions are used to spin up Tasks that get assigned to a Service, which is then assigned to a Cluster.
+
+image
+
+
+Task Definition#
+Task Definitions define which containers make up the overall app and how much resources are allocated to each container. You can think of them as blueprints, similar to a Docker Compose file.
+
+Navigate to Amazon ECS, click "Task Definitions", and then click the button "Create new Task Definition". Then select "EC2" in the "Select launch type compatibility" screen.
+
+Client
+First, update the "Task Definition Name" to flask-react-client-td and then add a new container:
+
+"Container name": client
+"Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:prod
+"Memory Limits (MB)": 300 soft limit
+"Port mappings": 0 host, 80 container
+We set the host port for the service to 0 so that a port is dynamically assigned when the Task is spun up.
+
+image
+
+
+It's important to note that you will not need to add the REACT_APP_API_SERVICE_URL environment variable to the container definition. This variable is required at the build-time, not the run-time, and is added during the building of the image on CodeBuild (within buildspec.yml):
+
+docker build \
+  --target builder \
+  --cache-from $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-client:builder \
+  -f services/client/Dockerfile.prod \
+  -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-client:builder \
+  --build-arg NODE_ENV=production \
+  --build-arg REACT_APP_API_SERVICE_URL=$REACT_APP_API_SERVICE_URL \
+  ./services/client
+It’s a good idea to configure logs, via LogConfiguration, to pipe logs to CloudWatch.
+
+To set up, we need to create a new Log Group. Navigate to CloudWatch, in a new window, and click "Logs" on the navigation pane. If this is your first time setting up a group, click the "Let's get started" button and then the "Create log group" button. Otherwise, click the "Actions" drop-down button, and then select "Create log group". Name the group flask-react-client-log.
+
+Back in ECS, add the Log Configuration:
+
+image
+
+Users#
+For the users service, use the name flask-react-users-td, and then add a single container:
+
+"Container name": users
+"Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/test-driven-users:prod
+"Memory Limits (MB)": 300 soft limit
+"Port mappings": 0 host, 5000 container
+"Log configuration": flask-react-users-log
+Then, add the following environment variables:
+
+FLASK_ENV - production
+APP_SETTINGS - src.config.ProductionConfig
+DATABASE_URL - YOUR_RDS_URI
+DATABASE_TEST_URL - postgres://postgres:postgres@api-db:5432/api_test
+SECRET_KEY - my_precious
+Change my_precious to a randomly generated string that's at least 50 characters. Use the actual RDS URI rather than YOUR_RDS_URI.
+
+image
+
+Add the container and create the new Task Definition.
+
+Cluster
+Clusters are where the actual containers run. They are just groups of EC2 instances that run Docker containers managed by ECS. To create a Cluster, click "Clusters" on the ECS Console sidebar, and then click the "Create Cluster" button. Select "EC2 Linux + Networking".
+
+Add:
+
+"Cluster name": flask-react-cluster
+"Provisioning Model": It's recommended to stick with On-Demand Instance instances, but feel free to use Spot if that's what you prefer.
+"EC2 instance type": t2.micro
+"Number of instances": 4
+"Key pair": Select an existing Key Pair or create a new one (see below for details on how to create a new Key Pair)
+
+image
+
+Select the default VPC and the previously created Security Group along with the appropriate subnets.
+
+image
+
+
+It will take a few minutes to set up the EC2 resources.
+
+Key Pair
+To create a new EC2 Key Pair, so we can SSH into the EC2 instances managed by ECS, navigate to Amazon EC2, click "Key Pairs" on the sidebar, and then click the "Create Key Pair" button.
+
+Name the new key pair ecs and add it to "~/.ssh".
+
+Service
+Services instantiate the containers from the Task Definitions and run them on EC2 boxes within the ECS Cluster. Such instances are called Tasks. To define a Service, on the "Services" tab within the newly created Cluster, click "Create".
+
+Create the following Services...
+
+Client
+Configure service:
+
+"Launch type": EC2
+"Task Definition":
+"Family": flask-react-client-td
+"Revision: LATEST_REVISION_NUMBER
+"Service name": flask-react-client-service
+"Number of tasks": 1
+
+
+image
+
+Leave the "Deployment type" setting at Rolling update.
+
+Review the Updating a Service guide to learn more about rolling vs blue/green deployments.
+
+You can configure how and where new Tasks are placed in a Cluster via "Task Placement" Strategies. We will use the basic "AZ Balanced Spread" in this course, which spreads Tasks evenly across Availability Zones (AZ), and then within each AZ, Tasks are spread evenly among Instances. For more, review Amazon ECS Task Placement Strategies
+
+Click "Next step".
+
+Configure network:
+
+Select the "Application Load Balancer" under "Load balancer type".
+
+"Load balancer name": flask-react-alb
+"Container name : port": client:0:80
+
+
+image
+
+
+Click "Add to load balancer".
+
+"Production listener port": 80:HTTP
+"Target group name": flask-react-client-tg
+
+image
+
+
+Do not enable "Service discovery". Click the next button a few times, and then "Create Service".
+
+Users
+Configure service:
+
+"Launch type": EC2
+"Task Definition":
+"Family": flask-react-users-td
+"Revision: LATEST_REVISION_NUMBER
+"Service name": flask-react-users-service
+"Number of tasks": 1
+Leave the "Deployment type" setting at Rolling update. Click "Next".
+
+Configure network:
+
+Select the "Application Load Balancer" under "Load balancer type".
+
+"Load balancer name": flask-react-alb
+"Container name: port": users:0:5000
+Click "Add to load balancer".
+
+"Production listener port": 80:HTTP
+"Target group name": flask-react-users-tg
+Do not enable "Service discovery". Click the next button a few times, and then "Create Service".
+
+image
+
+Sanity Check
+Navigate to the EC2 Dashboard, and click "Target Groups".
+
+Make sure flask-react-client-tg and flask-react-users-tg have a single registered instance each. Each of the instances should be unhealthy because they failed their respective health checks.
+
+ To get them to pass the health checks, we need to add another inbound rule to the Security Group associated with the containers (which we defined when we configured the Cluster), allowing traffic from the Load Balancer to reach the containers.
+
+Inbound Rules
+Within the EC2 Dashboard, click "Security Groups" and select the Security Group associated with the containers, which is the same group assigned to the Load Balancer. Click the "Inbound" tab and then click "Edit"
+
+Add a new rule:
+
+"Type": All traffic
+"Source": Choose Custom, then add the Security Group ID
+
+image
+
+Once added, the next time a container is added to each of the Target Groups, the instance should be healthy:
+
+image
+
+Essentially, when the Service was spun up, ECS automatically discovered and associated the new Cluster instances with the Application Load Balancer.
+
+image
+
+Next, navigate back to the Load Balancer and grab the "DNS name" from the "Description" tab, and navigate to http://LOAD_BALANCER_DNS_NAME/ping in your browser.
+
+If all went well, you should see:
+
+{
+  "message": "pong!",
+  "status": "success"
+}
+Try the /users endpoint at http://LOAD_BALANCER_DNS_NAME/users. You should see a 500 error since the database schema has not been applied.
+
+You should be able to see this in the logs as well:
+
+image
+
+Database Schema#
+We'll need to SSH into the EC2 instance associated with the users service to create the schema.
+
+First, on the "Services" tab within the created Cluster, click the link for the flask-react-users-service service.
+
+image
+
+From there, click on the "Tasks" tab and click the link for the associated Task.
+
+image
+
+Then, click the link for the EC2 Instance ID and grab the public IP:
+
+image
+
+SSH into the instance:
+
+$ ssh -i ~/.ssh/ecs.pem ec2-user@<EC2_PUBLIC_IP>
+You may need to update the permissions on the Pem file -- i.e., chmod 400 ~/.ssh/ecs.pem.
+
+Next, grab the Container ID for users (via docker ps), enter the shell within the running container, and then update the database:
+
+$ docker exec -it Container_ID bash
+# python manage.py recreate_db
+# python manage.py seed_db
+
+Navigate to http://LOAD_BALANCER_DNS_NAME/users again and you should see the users. Then, navigate to http://LOAD_BALANCER_DNS_NAME/. Manually test registering a new user, logging in, and logging out. Finally, ensure the Swagger UI works as well at http://LOAD_BALANCER_DNS_NAME/doc.
+image
+
+
+### ECS CodeBuild
+
+In the chapter, we'll update the CodeBuild CI/CD workflow to add a new revision to the Task Definition and update the Service.
+
+
+
+#### Zero Downtime Deployments
+Before jumping in, check your understanding by updating the app on your own:
+
+Make a quick change to the app locally.
+Commit and push your code to GitHub.
+Once the CodeBuild build passes, the new images will be built, tagged, and pushed to ECR.
+Once done, add a new revision to the applicable Task Definitions.
+Update the Service so that it uses the new revisions.
+Once you update the Service, ECS will automatically pick up on these changes and instantiate the Task Definitions, creating new Tasks that will spin up on the Cluster instances.
+
+ALB will run health checks on the new instances once they are up:
+
+Pass? If the health checks pass, traffic is forwarded appropriately to the new Tasks while the old Tasks are spun down.
+Fail? If the health checks fail, the new Tasks are spun down.
+Try this again while pinging the service in a background terminal tab. Does the application go down at all. It shouldn't.
+
+Now, let's automate that process.
+
+##### Steps
+Create local Task Definition JSON files
+Update creation of Task Definitions on AWS via CodeBuild
+Update Service via CodeBuild
+Task Definitions
+Let's create JSON files for the Task Definitions in a new folder at the project root called "ecs".
+
+    ecs_client_taskdefinition.json
+    ecs_users_taskdefinition.json
+
+Client
+
+```
+{
+  "containerDefinitions": [
+    {
+      "name": "client",
+      "image": "%s.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:prod",
+      "essential": true,
+      "memoryReservation": 300,
+      "portMappings": [
+        {
+          "hostPort": 0,
+          "protocol": "tcp",
+          "containerPort": 80
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "flask-react-client-log",
+          "awslogs-region": "us-west-1"
+        }
+      }
+    }
+  ],
+  "family": "flask-react-client-td"
+}
+
+```
+
+Users
+
+```
+{
+  "containerDefinitions": [
+    {
+      "name": "users",
+      "image": "%s.dkr.ecr.us-west-1.amazonaws.com/test-driven-users:prod",
+      "essential": true,
+      "memoryReservation": 300,
+      "portMappings": [
+        {
+          "hostPort": 0,
+          "protocol": "tcp",
+          "containerPort": 5000
+        }
+      ],
+      "environment": [
+        {
+          "name": "APP_SETTINGS",
+          "value": "src.config.ProductionConfig"
+        },
+        {
+          "name": "DATABASE_TEST_URL",
+          "value": "postgres://postgres:postgres@api-db:5432/api_test"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "%s"
+        },
+        {
+          "name": "SECRET_KEY",
+          "value": "%s"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "flask-react-users-log",
+          "awslogs-region": "us-west-1"
+        }
+      }
+    }
+  ],
+  "family": "flask-react-users-td"
+}
+```
+
+CodeBuild
+Update task definition
+Add a new file to the root called deploy.sh:
+
+#!/bin/sh
+
+JQ="jq --raw-output --exit-status"
+
+configure_aws_cli() {
+  aws --version
+  aws configure set default.region us-west-1
+  aws configure set default.output json
+  echo "AWS Configured!"
+}
+
+register_definition() {
+  if revision=$(aws ecs register-task-definition --cli-input-json "$task_def" | $JQ '.taskDefinition.taskDefinitionArn'); then
+    echo "Revision: $revision"
+  else
+    echo "Failed to register task definition"
+    return 1
+  fi
+}
+
+deploy_cluster() {
+
+  # users
+  template="ecs_users_taskdefinition.json"
+  task_template=$(cat "ecs/$template")
+  task_def=$(printf "$task_template" $AWS_ACCOUNT_ID $AWS_RDS_URI $PRODUCTION_SECRET_KEY)
+  echo "$task_def"
+  register_definition
+
+  # client
+  template="ecs_client_taskdefinition.json"
+  task_template=$(cat "ecs/$template")
+  task_def=$(printf "$task_template" $AWS_ACCOUNT_ID)
+  echo "$task_def"
+  register_definition
+
+}
+
+configure_aws_cli
+deploy_cluster
+Here, the AWS CLI is configured and then the deploy_cluster function is fired, which updates the existing Task Definitions with the definitions found in the JSON files we just created.
+
+Add the AWS_RDS_URI and PRODUCTION_SECRET_KEY environment variables to the CodeBuild project.
+
+Open the the project, click the "Edit" dropdown, and then select "Environment".
+
+image
+
+Then, add the two environment variables under the "Additional configuration" section.
+
+image
+
+To create a key, open the Python shell and run:
+
+>>> import binascii
+>>> import os
+>>> binascii.hexlify(os.urandom(24))
+b'958185f1b6ec1290d5aec4eb4dc77e67846ce85cdb7a212a'
+Update the post_build in buildspec.yml:
+
+post_build:
+  commands:
+  - echo pushing prod images to ecr...
+  - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-users:prod
+  - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-client:builder
+  - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-driven-client:prod
+  - chmod +x ./deploy.sh
+  - bash deploy.sh
+Attach the AmazonECS_FullAccess policy to the flask-react-build-role service role in the IAM dashboard.
+
+image
+
+Commit and push your code to GitHub. After the CodeBuild run passes, make sure new images were created and revisions to the Task Definitions were added.
+
+image
+image
+
+You can ensure that the correct Task Definition JSON files were used to create the revisions by reviewing the latest revisions added to each of the Task Definitions. For example, open the latest revision for flask-react-users-td. Under the "Container Definitions", click the drop-down next to the users container. Make sure the DATABASE_URL and SECRET_KEY environment variables are correct:
+
+image
+
+Then, navigate to the Cluster. Update each of the Services so that they use the new Task Definitions.
+
+iamge
+
+Again, ECS will instantiate the Task Definitions, creating new Tasks that will spin up on the Cluster instances. Then, as long as the health checks pass, the load balancer will start sending traffic to them.
+
+Make sure the instances associated with the Target Groups -- flask-react-client-tg and flask-react-users-tg -- are healthy.
+
+Update service
+Now, update deploy.sh, like so, to automatically update the Services after new revisions are added to the Task Definitions:
+
+#!/bin/sh
+
+JQ="jq --raw-output --exit-status"
+
+configure_aws_cli() {
+  aws --version
+  aws configure set default.region us-west-1
+  aws configure set default.output json
+  echo "AWS Configured!"
+}
+
+register_definition() {
+  if revision=$(aws ecs register-task-definition --cli-input-json "$task_def" | $JQ '.taskDefinition.taskDefinitionArn'); then
+    echo "Revision: $revision"
+  else
+    echo "Failed to register task definition"
+    return 1
+  fi
+}
+
+# new
+update_service() {
+  if [[ $(aws ecs update-service --cluster $cluster --service $service --task-definition $revision | $JQ '.service.taskDefinition') != $revision ]]; then
+    echo "Error updating service."
+    return 1
+  fi
+}
+
+deploy_cluster() {
+
+  cluster="flask-react-cluster" # new
+
+  # users
+  service="flask-react-users-service"  # new
+  template="ecs_users_taskdefinition.json"
+  task_template=$(cat "ecs/$template")
+  task_def=$(printf "$task_template" $AWS_ACCOUNT_ID $AWS_RDS_URI $PRODUCTION_SECRET_KEY)
+  echo "$task_def"
+  register_definition
+  update_service  # new
+
+  # client
+  service="flask-react-client-service"  # new
+  template="ecs_client_taskdefinition.json"
+  task_template=$(cat "ecs/$template")
+  task_def=$(printf "$task_template" $AWS_ACCOUNT_ID)
+  echo "$task_def"
+  register_definition
+  update_service  # new
+
+}
+
+configure_aws_cli
+deploy_cluster
+Commit and push your code to GitHub to trigger a new run on CodeBuild. Once done, you should see a new revision associated with each Task Definition and the Services should now be running a new Task based on that revision.
+
+Test everything out again.
+
+Domain Name and HTTPS
+Route 53 can be used to link a domain name to the instances running on the Cluster. The setup is fairly simple. Review Routing Traffic to an ELB Load Balancer for more details.
+
+You should configure HTTPS as well. You'll need to set up an SSL certificate with Certificate Manager, add an HTTPS listener to the Application Load Balancer, and then proxy 443 traffic to HTTP ports 80 and 5000 on the instances via Target Groups.
