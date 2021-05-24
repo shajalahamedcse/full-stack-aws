@@ -89,7 +89,7 @@ $ docker build \
   ./services/backend
 
 $ docker build \
-  -f services/client/Dockerfile \
+  -f services/frontend/Dockerfile \
   -t 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend \
   ./services/frontend
 
@@ -109,16 +109,15 @@ Login Succeeded
 Push the images:
 
 ```
-$ docker push <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend:dev
+$ docker push 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend
 
-$ docker push <AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend:dev
+$ docker push 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend
 ```
 
 Again, be sure to replace <AWS_ACCOUNT_ID> with your AWS account ID.
 
 If everything goes well, a new image should be added to each of these repositories.
 
-iamge
 
 
 ## CodeBuild
@@ -131,7 +130,7 @@ CodeBuild is a managed continuous integration service used for building and test
 
 Curious about the difference between continuous integration, continuous delivery, and continuous deployment? Check out the Continuous Delivery Explained guide.
 
-Within the AWS Console, navigate to the CodeBuild dashboard and click "Create project".
+Within the AWS Console, navigate to the CodeBuild dashboard and click **"Create Build Project"**.
 
 image
 
@@ -140,8 +139,8 @@ Let's create a new project for building the Docker images.
 
 #### Project configuration
 
-    * "Project name" - flask-react-build
-    * "Description" - build and test docker images
+    * "Project name" - web-app-build
+    * "Description" - Build and deploy docker images
     * "Build badge" - check the flag to "Enable build badge"
 
 iamge
@@ -163,11 +162,11 @@ Under "Primary source webhook events", check "Rebuild every time a code change i
     * "Environment image" - use the "Managed image"
     * "Operating system" - "Ubuntu"
     * "Runtime" - "Standard"
-    * "Image" - "aws/codebuild/standard:4.0"
+    * "Image" - "aws/codebuild/standard:5.0"
     * "Image version" - "Always use the latest image for this runtime version"
     * "Privileged" - check the flag
     * "Service role" - "New service role"
-    * "Role name" - flask-react-build-role
+    * "Role name" - webapp-build-role
 
 image
 
