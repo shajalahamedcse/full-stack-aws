@@ -11,7 +11,7 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 COPY package.json .
 COPY package-lock.json .
 RUN npm ci
-RUN npm install react-scripts@4.0.0 prettier@2.1.1 eslint@7.13.0 -g --silent
+RUN npm install --silent
 
 # start app
 CMD ["npm", "start"]
