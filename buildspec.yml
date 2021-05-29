@@ -19,19 +19,19 @@ phases:
       - >
         docker build \
           -f services/backend/Dockerfile \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:$DOCKER_TAG \
-          ./services/users
+          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:latest \
+          ./services/backend
       - >
         docker build \
           -f services/frontend/Dockerfile \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:$$DOCKER_TAG \
+          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:latest \
           --build-arg REACT_APP_API_SERVICE_URL=$REACT_APP_API_SERVICE_URL \
           ./services/frontend
 
-  post_build:
-    commands:
-    - echo pushing prod images to ecr...
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:$$DOCKER_TAG
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:$DOCKER_TAG
-    - chmod +x ./deploy.sh
-    - bash deploy.sh
+  # post_build:
+  #   commands:
+  #   # - echo pushing prod images to ecr...
+  #   # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:$$DOCKER_TAG
+  #   # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:$DOCKER_TAG
+  #   # - chmod +x ./deploy.sh
+  #   # - bash deploy.sh

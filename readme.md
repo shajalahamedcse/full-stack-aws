@@ -63,7 +63,7 @@ Keep the tags **mutable**. For more on this, review the **Image Tag Mutability**
 
 Ignore the "build, tag, and push" instructions if they come up; just set up the images for now.
 
-<kbd> <img width="700" alt="4-create-two-reposiotry" src="4-create-two-reposiotry.png"> </kbd>
+<kbd> <img width="700" alt="4-create-two-reposiotry" src="4-create-two-repository.png"> </kbd>
 
 You can also create a new repository with the **AWS CLI**:
 
@@ -469,7 +469,7 @@ postgres://webapp:JZTSg9QJr5ISN2ygOUIX@webapp-db.cv0q1mdq4txg.ap-southeast-2.rds
 
 Let's configure a Task Definition along with a Cluster and a Service within Elastic Container Service (ECS).
 
-### ECS
+## ECS
 ECS is a container orchestration system used for managing and deploying Docker-based containers.
 
 It has four main components:
@@ -483,19 +483,20 @@ In short, Task Definitions are used to spin up Tasks that get assigned to a Serv
 image
 
 
-Task Definition#
+### Task Definition
 Task Definitions define which containers make up the overall app and how much resources are allocated to each container. You can think of them as blueprints, similar to a Docker Compose file.
 
 Navigate to Amazon ECS, click "Task Definitions", and then click the button "Create new Task Definition". Then select "EC2" in the "Select launch type compatibility" screen.
 
-Client
-First, update the "Task Definition Name" to flask-react-client-td and then add a new container:
+#### Client
 
-"Container name": client
-"Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:prod
-"Memory Limits (MB)": 300 soft limit
-"Port mappings": 0 host, 80 container
-We set the host port for the service to 0 so that a port is dynamically assigned when the Task is spun up.
+    * First, update the "Task Definition Name" to flask-react-client-td and then add a new container:
+
+    * "Container name": client
+    * "Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:prod
+    * "Memory Limits (MB)": 300 soft limit
+    * "Port mappings": 0 host, 80 container
+    * We set the host port for the service to 0 so that a port is dynamically assigned when the Task is spun up.
 
 image
 

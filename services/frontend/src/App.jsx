@@ -31,7 +31,7 @@ class App extends Component {
 
     this.state = {
       users: [],
-      title: "TestDriven.io",
+      title: "omdb.io",
       accessToken: null,
       messageType: null,
       messageText: null,
