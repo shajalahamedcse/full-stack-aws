@@ -18,12 +18,12 @@ phases:
       - echo building prod images...
       - >
         docker build \
-          -f services/backend/Dockerfile \
+          -f services/backend/Dockerfile.prod \
           -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:latest \
           ./services/backend
       - >
         docker build \
-          -f services/frontend/Dockerfile \
+          -f services/frontend/Dockerfile.prod \
           -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:latest \
           --build-arg REACT_APP_API_SERVICE_URL=$REACT_APP_API_SERVICE_URL \
           ./services/frontend
