@@ -28,10 +28,10 @@ phases:
           --build-arg REACT_APP_API_SERVICE_URL=$REACT_APP_API_SERVICE_URL \
           ./services/frontend
 
-  # post_build:
-  #   commands:
-  #   # - echo pushing prod images to ecr...
-  #   # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:$$DOCKER_TAG
-  #   # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:$DOCKER_TAG
-  #   # - chmod +x ./deploy.sh
-  #   # - bash deploy.sh
+  post_build:
+    commands:
+    - echo pushing prod images to ecr...
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:latest
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:latest
+    # - chmod +x ./deploy.sh
+    # - bash deploy.sh
