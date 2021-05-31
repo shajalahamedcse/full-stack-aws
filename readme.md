@@ -474,17 +474,21 @@ ECS is a container orchestration system used for managing and deploying Docker-b
 
 It has four main components:
 
-    Task Definitions
-    Tasks
-    Services
-    Clusters
+    * Task Definitions
+    * Tasks
+    * Services
+    * Clusters
+  
+
 In short, Task Definitions are used to spin up Tasks that get assigned to a Service, which is then assigned to a Cluster.
 
 image
 
 
 ### Task Definition
-Task Definitions define which containers make up the overall app and how much resources are allocated to each container. You can think of them as blueprints, similar to a Docker Compose file.
+
+    * Task Definitions define which containers make up the overall app and how much resources are allocated to each container. 
+    * You can think of them as blueprints, similar to a Docker Compose file.
 
 Navigate to Amazon ECS, click "Task Definitions", and then click the button "Create new Task Definition". Then select "EC2" in the "Select launch type compatibility" screen.
 
@@ -493,7 +497,7 @@ Navigate to Amazon ECS, click "Task Definitions", and then click the button "Cre
     * First, update the "Task Definition Name" to flask-react-client-td and then add a new container:
 
     * "Container name": client
-    * "Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/test-driven-client:prod
+    * "Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.ap-southeast-2.amazonaws.com/test-frontend:latest
     * "Memory Limits (MB)": 300 soft limit
     * "Port mappings": 0 host, 80 container
     * We set the host port for the service to 0 so that a port is dynamically assigned when the Task is spun up.
@@ -519,14 +523,15 @@ Back in ECS, add the Log Configuration:
 
 image
 
-Users#
+## Users
 For the users service, use the name flask-react-users-td, and then add a single container:
 
-"Container name": users
-"Image": YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-west-1.amazonaws.com/test-driven-users:prod
-"Memory Limits (MB)": 300 soft limit
-"Port mappings": 0 host, 5000 container
-"Log configuration": flask-react-users-log
+    "Container name": backend
+    "Image": 240868563953.dkr.ecr.ap-southeast-2.amazonaws.com/test-backend:latest
+    "Memory Limits (MB)": 300 soft limit
+    "Port mappings": 0 host, 5000 container
+    "Log configuration": flask-react-users-log
+
 Then, add the following environment variables:
 
 FLASK_ENV - production
@@ -540,16 +545,16 @@ image
 
 Add the container and create the new Task Definition.
 
-Cluster
+## Cluster
 Clusters are where the actual containers run. They are just groups of EC2 instances that run Docker containers managed by ECS. To create a Cluster, click "Clusters" on the ECS Console sidebar, and then click the "Create Cluster" button. Select "EC2 Linux + Networking".
 
 Add:
 
-"Cluster name": flask-react-cluster
-"Provisioning Model": It's recommended to stick with On-Demand Instance instances, but feel free to use Spot if that's what you prefer.
-"EC2 instance type": t2.micro
-"Number of instances": 4
-"Key pair": Select an existing Key Pair or create a new one (see below for details on how to create a new Key Pair)
+    "Cluster name": flask-react-cluster
+    "Provisioning Model": It's recommended to stick with On-Demand Instance instances, but feel free to use Spot if that's what you prefer.
+    "EC2 instance type": t2.micro
+    "Number of instances": 4
+    "Key pair": Select an existing Key Pair or create a new one (see below for details on how to create a new Key Pair)
 
 image
 
@@ -560,25 +565,26 @@ image
 
 It will take a few minutes to set up the EC2 resources.
 
-Key Pair
+### Key Pair
 To create a new EC2 Key Pair, so we can SSH into the EC2 instances managed by ECS, navigate to Amazon EC2, click "Key Pairs" on the sidebar, and then click the "Create Key Pair" button.
 
 Name the new key pair ecs and add it to "~/.ssh".
 
-Service
+### Service
 Services instantiate the containers from the Task Definitions and run them on EC2 boxes within the ECS Cluster. Such instances are called Tasks. To define a Service, on the "Services" tab within the newly created Cluster, click "Create".
 
 Create the following Services...
 
-Client
+### Frontend
+
 Configure service:
 
-"Launch type": EC2
-"Task Definition":
-"Family": flask-react-client-td
-"Revision: LATEST_REVISION_NUMBER
-"Service name": flask-react-client-service
-"Number of tasks": 1
+    "Launch type": EC2
+    "Task Definition":
+    "Family": flask-react-client-td
+    "Revision: LATEST_REVISION_NUMBER
+    "Service name": flask-react-frontend-service
+    "Number of tasks": 1
 
 
 image
@@ -596,7 +602,7 @@ Configure network:
 Select the "Application Load Balancer" under "Load balancer type".
 
 "Load balancer name": flask-react-alb
-"Container name : port": client:0:80
+"Container name : port": client:80:80
 
 
 image
@@ -612,7 +618,7 @@ image
 
 Do not enable "Service discovery". Click the next button a few times, and then "Create Service".
 
-Users
+### Backend
 Configure service:
 
 "Launch type": EC2

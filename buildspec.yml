@@ -18,7 +18,7 @@ phases:
       - echo building prod images...
       - >
         docker build \
-          -f services/backend/Dockerfile.prod \
+          -f services/backend/Dockerfile \
           -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:latest \
           ./services/backend
       - >
