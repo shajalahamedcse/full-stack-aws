@@ -23,5 +23,6 @@ RUN pip install -r requirements-dev.txt
 COPY . .
 
 # add entrypoint.sh
-COPY ./entrypoint.sh .
-RUN chmod +x /usr/src/app/entrypoint.sh
+#COPY ./entrypoint.sh .
+#RUN chmod +x /usr/src/app/entrypoint.sh
+CMD python manage.py run -h 0.0.0.0
