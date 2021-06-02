@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "ap-southeast-2"
-    REACT_APP_API_SERVICE_URL: "http://webapp-alb-23323279.ap-southeast-2.elb.amazonaws.com/"
+    REACT_APP_API_SERVICE_URL: "http://webapp-alb-23323279.ap-southeast-2.elb.amazonaws.com"
 
 phases:
   install:
