@@ -2,9 +2,10 @@ service: serverless-aws-emr-api-gateway
 
 provider:
   name: aws
-  runtime: python3.6
+  runtime: nodejs12.x
   apiKeys:
-    - my_api_key
+    - weather-api-key
+  region: ap-southeast-2
 
   iamRoleStatements:
     - Effect: "Allow"
