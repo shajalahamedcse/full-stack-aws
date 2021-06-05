@@ -6,10 +6,11 @@
     },
     "provider": {
       "name": "aws",
-      "runtime": "python3.6",
+      "runtime": "nodejs12.x",
       "apiKeys": [
-        "my_api_key"
+        "weather-api-key"
       ],
+      "region": "ap-southeast-2",
       "iamRoleStatements": [
         {
           "Effect": "Allow",
@@ -65,7 +66,6 @@
         "spark_executor_cores": "2"
       },
       "stage": "dev",
-      "region": "us-east-1",
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -236,10 +236,10 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/serverless-aws-emr-api-gateway/dev/1622840295385-2021-06-04T20:58:15.385Z/serverless-aws-emr-api-gateway.zip"
+                "S3Key": "serverless/serverless-aws-emr-api-gateway/dev/1622847652542-2021-06-04T23:00:52.542Z/serverless-aws-emr-api-gateway.zip"
               },
               "Handler": "index.handler",
-              "Runtime": "python3.6",
+              "Runtime": "nodejs12.x",
               "FunctionName": "serverless-aws-emr-api-gateway-dev-emr_launcher_api_gateway",
               "MemorySize": 1024,
               "Timeout": 6,
@@ -272,14 +272,14 @@
               "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLogGroup"
             ]
           },
-          "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersion0IZ20Tf2VgqTaqnQpqPQJCmKWlSRBxIdPXu8WJY": {
+          "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionoCYfZoJGbN4mB3UxN6yNw3ffXyTpXAsmEWocfVVHs": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaFunction"
               },
-              "CodeSha256": "W8xEIdXkUFFfaJYMzbIvxIOoWfceTeenoon/xPWtfoI="
+              "CodeSha256": "/F0l0TP83RR3B2IXGlmj4WI6WTf2m60c6m9BIb/ZdB4="
             }
           },
           "ApiGatewayRestApi": {
@@ -352,7 +352,7 @@
               "MethodResponses": []
             }
           },
-          "ApiGatewayDeployment1622840291920": {
+          "ApiGatewayDeployment1622847649359": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -368,7 +368,7 @@
             "Type": "AWS::ApiGateway::ApiKey",
             "Properties": {
               "Enabled": true,
-              "Name": "my_api_key",
+              "Name": "weather-api-key",
               "StageKeys": [
                 {
                   "RestApiId": {
@@ -378,11 +378,11 @@
                 }
               ]
             },
-            "DependsOn": "ApiGatewayDeployment1622840291920"
+            "DependsOn": "ApiGatewayDeployment1622847649359"
           },
           "ApiGatewayUsagePlan": {
             "Type": "AWS::ApiGateway::UsagePlan",
-            "DependsOn": "ApiGatewayDeployment1622840291920",
+            "DependsOn": "ApiGatewayDeployment1622847649359",
             "Properties": {
               "ApiStages": [
                 {
@@ -458,7 +458,7 @@
           "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersion0IZ20Tf2VgqTaqnQpqPQJCmKWlSRBxIdPXu8WJY"
+              "Ref": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionoCYfZoJGbN4mB3UxN6yNw3ffXyTpXAsmEWocfVVHs"
             },
             "Export": {
               "Name": "sls-serverless-aws-emr-api-gateway-dev-EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaFunctionQualifiedArn"
@@ -594,9 +594,9 @@
         "package": {},
         "memory": 1024,
         "timeout": 6,
-        "runtime": "python3.6",
+        "runtime": "nodejs12.x",
         "vpc": {},
-        "versionLogicalId": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersion0IZ20Tf2VgqTaqnQpqPQJCmKWlSRBxIdPXu8WJY"
+        "versionLogicalId": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionoCYfZoJGbN4mB3UxN6yNw3ffXyTpXAsmEWocfVVHs"
       }
     },
     "configValidationMode": "warn",
@@ -617,7 +617,7 @@
     "artifact": "D:\\weather\\flask-react-in-ecs\\lambda\\.serverless\\serverless-aws-emr-api-gateway.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/serverless-aws-emr-api-gateway/dev/1622840295385-2021-06-04T20:58:15.385Z",
+    "artifactDirectoryName": "serverless/serverless-aws-emr-api-gateway/dev/1622847652542-2021-06-04T23:00:52.542Z",
     "artifact": "serverless-aws-emr-api-gateway.zip"
   }
 }
