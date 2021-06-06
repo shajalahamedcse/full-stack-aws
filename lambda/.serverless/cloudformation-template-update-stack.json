@@ -197,7 +197,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/serverless-aws-emr-api-gateway/dev/1622847652542-2021-06-04T23:00:52.542Z/serverless-aws-emr-api-gateway.zip"
+          "S3Key": "serverless/serverless-aws-emr-api-gateway/dev/1622986293614-2021-06-06T13:31:33.614Z/serverless-aws-emr-api-gateway.zip"
         },
         "Handler": "index.handler",
         "Runtime": "nodejs12.x",
@@ -233,14 +233,14 @@
         "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLogGroup"
       ]
     },
-    "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionoCYfZoJGbN4mB3UxN6yNw3ffXyTpXAsmEWocfVVHs": {
+    "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionxEhgrPEBS4inHeboPMKuoHfgdpVXSU5g579hno9A4M": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaFunction"
         },
-        "CodeSha256": "/F0l0TP83RR3B2IXGlmj4WI6WTf2m60c6m9BIb/ZdB4="
+        "CodeSha256": "QCwfbBEDIqUnYgXDU2iTfhVPUuzsv8QFUZoKZy2M/uA="
       }
     },
     "ApiGatewayRestApi": {
@@ -313,7 +313,7 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1622847649359": {
+    "ApiGatewayDeployment1622986289785": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -339,11 +339,11 @@
           }
         ]
       },
-      "DependsOn": "ApiGatewayDeployment1622847649359"
+      "DependsOn": "ApiGatewayDeployment1622986289785"
     },
     "ApiGatewayUsagePlan": {
       "Type": "AWS::ApiGateway::UsagePlan",
-      "DependsOn": "ApiGatewayDeployment1622847649359",
+      "DependsOn": "ApiGatewayDeployment1622986289785",
       "Properties": {
         "ApiStages": [
           {
@@ -419,7 +419,7 @@
     "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionoCYfZoJGbN4mB3UxN6yNw3ffXyTpXAsmEWocfVVHs"
+        "Ref": "EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaVersionxEhgrPEBS4inHeboPMKuoHfgdpVXSU5g579hno9A4M"
       },
       "Export": {
         "Name": "sls-serverless-aws-emr-api-gateway-dev-EmrUnderscorelauncherUnderscoreapiUnderscoregatewayLambdaFunctionQualifiedArn"

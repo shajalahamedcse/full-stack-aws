@@ -5,7 +5,7 @@ import axios from "axios";
 const UsersList = (props) => {
   const [temp, setTemp] = useState("");
   const header = "2a9b98f78b48a85eedc552fc60435a49";
-  const url = `https://api.openweathermap.org/data/2.5/weather?q=Chittagong&appid=${header}`;
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=Melbourne&appid=${header}`;
   useEffect(() => {
     axios
       .get(url)
