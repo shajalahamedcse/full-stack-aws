@@ -3,7 +3,7 @@ import axios from "axios";
 import { Route, Switch } from "react-router-dom";
 import Modal from "react-modal";
 
-import UsersList from "./components/UsersList";
+import Weather from "./components/Weather";
 import About from "./components/About";
 import NavBar from "./components/NavBar";
 import LoginForm from "./components/LoginForm";
@@ -31,7 +31,7 @@ class App extends Component {
 
     this.state = {
       users: [],
-      title: "omdb.io",
+      title: "Weather search",
       accessToken: null,
       messageType: null,
       messageText: null,
@@ -173,110 +173,13 @@ class App extends Component {
 
   render() {
     return (
-      <div>
+      <div className="container">
         <NavBar
           title={this.state.title}
           logoutUser={this.logoutUser}
           isAuthenticated={this.isAuthenticated}
         />
-        <section className="section">
-          <div className="container">
-            {this.state.messageType && this.state.messageText && (
-              <Message
-                messageType={this.state.messageType}
-                messageText={this.state.messageText}
-                removeMessage={this.removeMessage}
-              />
-            )}
-            <div className="columns">
-              <div className="column is-half">
-                <br />
-                <Switch>
-                  <Route
-                    exact
-                    path="/"
-                    render={() => (
-                      <div>
-                        <h1 className="title is-1">Users</h1>
-                        <hr />
-                        <br />
-                        {this.isAuthenticated() && (
-                          <button
-                            onClick={this.handleOpenModal}
-                            className="button is-primary"
-                          >
-                            Add User
-                          </button>
-                        )}
-                        <br />
-                        <br />
-                        <Modal
-                          isOpen={this.state.showModal}
-                          style={modalStyles}
-                        >
-                          <div className="modal is-active">
-                            <div className="modal-background" />
-                            <div className="modal-card">
-                              <header className="modal-card-head">
-                                <p className="modal-card-title">Add User</p>
-                                <button
-                                  className="delete"
-                                  aria-label="close"
-                                  onClick={this.handleCloseModal}
-                                />
-                              </header>
-                              <section className="modal-card-body">
-                                <AddUser addUser={this.addUser} />
-                              </section>
-                            </div>
-                          </div>
-                        </Modal>
-                        <UsersList
-                          users={this.state.users}
-                          removeUser={this.removeUser}
-                          isAuthenticated={this.isAuthenticated}
-                        />
-                      </div>
-                    )}
-                  />
-                  <Route exact path="/about" component={About} />
-                  <Route
-                    exact
-                    path="/register"
-                    render={() => (
-                      <RegisterForm
-                        // eslint-disable-next-line react/jsx-handler-names
-                        handleRegisterFormSubmit={this.handleRegisterFormSubmit}
-                        isAuthenticated={this.isAuthenticated}
-                      />
-                    )}
-                  />
-                  <Route
-                    exact
-                    path="/login"
-                    render={() => (
-                      <LoginForm
-                        // eslint-disable-next-line react/jsx-handler-names
-                        handleLoginFormSubmit={this.handleLoginFormSubmit}
-                        isAuthenticated={this.isAuthenticated}
-                      />
-                    )}
-                  />
-                  <Route
-                    exact
-                    path="/status"
-                    render={() => (
-                      <UserStatus
-                        accessToken={this.state.accessToken}
-                        isAuthenticated={this.isAuthenticated}
-                      />
-                    )}
-                  />
-                </Switch>
-              </div>
-            </div>
-          </div>
-        </section>
+        <Weather isAuthenticated={this.isAuthenticated} />
       </div>
     );
   }

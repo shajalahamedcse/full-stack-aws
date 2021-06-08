@@ -1,5 +1,5 @@
-service: serverless-aws-emr-api-gateway
-
+service: serverless-weather
+frameworkVersion: "2"
 provider:
   name: aws
   runtime: nodejs12.x
@@ -11,6 +11,6 @@ functions:
     handler: lambdas/weatherData.handler
     events:
       - http:
-          path: weatherdata/{CITY}
+          path: weatherdata/{ID}
           method: GET
           cors: true
