@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: nodejs12.x
   region: ap-southeast-2
+  profile: slss_weather
 
 functions:
   getWeather:
