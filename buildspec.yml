@@ -30,8 +30,8 @@ phases:
 
   post_build:
     commands:
-    - echo pushing prod images to ecr...
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:latest
-    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:latest
+      - echo pushing prod images to ecr...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-frontend:latest
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/test-backend:latest
     # - chmod +x ./deploy.sh
     # - bash deploy.sh
