@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Route, Switch } from "react-router-dom";
+import { Redirect, Route, Switch } from "react-router-dom";
 import Modal from "react-modal";
 
 import Weather from "./components/Weather";
@@ -8,7 +8,6 @@ import About from "./components/About";
 import NavBar from "./components/NavBar";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
-import UserStatus from "./components/UserStatus";
 import Message from "./components/Message";
 import AddUser from "./components/AddUser";
 
@@ -179,7 +178,55 @@ class App extends Component {
           logoutUser={this.logoutUser}
           isAuthenticated={this.isAuthenticated}
         />
-        <Weather isAuthenticated={this.isAuthenticated} />
+        {this.state.messageType && this.state.messageText && (
+          <Message
+            messageType={this.state.messageType}
+            messageText={this.state.messageText}
+            removeMessage={this.removeMessage}
+          />
+        )}
+        <Switch>
+          <Route
+            exact
+            path="/register"
+            render={() => (
+              <RegisterForm
+                // eslint-disable-next-line react/jsx-handler-names
+                handleRegisterFormSubmit={this.handleRegisterFormSubmit}
+                isAuthenticated={this.isAuthenticated}
+              />
+            )}
+          />
+          <Route
+            exact
+            path="/login"
+            render={() => (
+              <LoginForm
+                // eslint-disable-next-line react/jsx-handler-names
+                handleLoginFormSubmit={this.handleLoginFormSubmit}
+                isAuthenticated={this.isAuthenticated}
+              />
+            )}
+          />
+          {/* <Route
+            exact
+            path="/"
+            render={() => {
+              !!this.isAuthenticated() ? (
+                <Weather isAuthenticated={this.isAuthenticated} />
+              ) : (
+                <div>hello world</div>
+              );
+            }}
+          /> */}
+          <Route>
+            {!!this.isAuthenticated() ? (
+              <Weather isAuthenticated={this.isAuthenticated} />
+            ) : (
+              <Redirect to="/login" />
+            )}
+          </Route>
+        </Switch>
       </div>
     );
   }

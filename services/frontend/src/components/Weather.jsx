@@ -24,8 +24,8 @@ const Weather = (props) => {
     }
   };
   return (
-    <div style={{}}>
-      {props.isAuthenticated && (
+    <div>
+      {!!props.isAuthenticated() && (
         <div>
           <input
             className="form-control"
