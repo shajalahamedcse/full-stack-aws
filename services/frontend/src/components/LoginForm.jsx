@@ -96,6 +96,7 @@ const LoginForm = (props) => {
           );
         }}
       </Formik>
+      {/* <p className="content">This is Assignment-3 of Cloud Computing.This assignment is submitted by Piyush (S3805449) and Shouri (S3796469).</p> */}
     </div>
   );
 };

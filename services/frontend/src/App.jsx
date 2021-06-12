@@ -208,17 +208,15 @@ class App extends Component {
               />
             )}
           />
-          {/* <Route
+
+          <Route
             exact
-            path="/"
-            render={() => {
-              !!this.isAuthenticated() ? (
-                <Weather isAuthenticated={this.isAuthenticated} />
-              ) : (
-                <div>hello world</div>
-              );
-            }}
-          /> */}
+            path="/about"
+            render={() => (
+              <About />
+            )}
+          />
+
           <Route>
             {!!this.isAuthenticated() ? (
               <Weather isAuthenticated={this.isAuthenticated} />
@@ -226,6 +224,7 @@ class App extends Component {
               <Redirect to="/login" />
             )}
           </Route>
+
         </Switch>
       </div>
     );

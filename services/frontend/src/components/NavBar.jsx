@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import About from "./About";
 
 import "./NavBar.css";
 
@@ -17,6 +18,9 @@ const NavBar = (props) => {
         </Link>
         <Link to="/login" className="navbar-item" data-testid="nav-login">
           Log In
+        </Link>
+        <Link to="/about" className="navbar-item" data-testid="nav-about">
+            About
         </Link>
       </div>
     </div>
